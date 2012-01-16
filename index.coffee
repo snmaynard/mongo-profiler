@@ -1,3 +1,5 @@
+#!/usr/bin/env coffee
+
 mongo = require "mongoskin"
 express = require "express"
 util = require "util"
