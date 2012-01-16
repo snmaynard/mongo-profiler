@@ -13,6 +13,7 @@ th {
     <tr>
       <th>Query</th>
       <th>Collection</th>
+      <th>Operation</th>
       <th>Executed</th>
       <th>Total Millis</th>
     </tr>
@@ -22,6 +23,7 @@ th {
       <tr>
         <td><%= queryStats[i].query %></td>
         <td><%= queryStats[i].collection %></td>
+        <td><%= queryStats[i].operation %></td>
         <td><%= queryStats[i].totalExecutions %></td>
         <td><%= queryStats[i].totalMillis %></td>
       </tr>

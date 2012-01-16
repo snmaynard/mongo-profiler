@@ -10,7 +10,7 @@ class ProfileResults
     now = new Date()
     return callback(null, @operations) if @requestedAt > new Date(now.getTime() - 60 * 1000)
     
-    range = 1000 * 60 * 60 * 24 * 7
+    range = 1000 * 60 * 60 * 24 * 1
     query =
       ts:
         $gte: new Date(now.getTime() - range)
@@ -123,10 +123,10 @@ app.get "/queryStats", (req, res) ->
         queryKey = if op.normalized_query.length == 0 then "NO_QUERY" else op.normalized_query
       else
         queryKey = "undefined"
-      index = queryStatsLookup[queryKey]
+      index = queryStatsLookup[op.operation + queryKey]
       if not index?
-        index = queryStats.push({collection: op.collection, query: queryKey, totalExecutions: 0, totalMillis: 0 }) - 1
-        queryStatsLookup[queryKey] = index
+        index = queryStats.push({collection: op.collection, query: queryKey, operation: op.operation, totalExecutions: 0, totalMillis: 0 }) - 1
+        queryStatsLookup[op.operation + queryKey] = index
       
       
       queryStats[index].totalExecutions += 1
