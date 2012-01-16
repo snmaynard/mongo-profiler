@@ -18,7 +18,7 @@ class ProfileResults
     now = new Date()
     return callback(null, @operations[serverKey]) if @requestedAt[serverKey] > new Date(now.getTime() - 60 * 1000)
     
-    range = 1000 * 60 * 60 * 24 * 10
+    range = 1000 * 60 * 60 * 24 * 1
     query =
       ts:
         $gte: new Date(now.getTime() - range)
