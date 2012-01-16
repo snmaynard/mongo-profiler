@@ -1,0 +1,34 @@
+<style>
+table {
+  width: 100%;
+}
+
+th {
+  text-align: left;
+}
+</style>
+
+<table>
+  <thead>
+    <tr>
+      <th>Collection</th>
+      <th>Totals Queries</th>
+      <th>Operations</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% for(var i = 0, length = collectionStats.length; i < length; i++) { %>
+      <tr>
+        <td><%= collectionStats[i].collection %></td>
+        <td><%= collectionStats[i].operations.totalOps %></td>
+        <td>
+        <% for(var operation in collectionStats[i].operations) { %>
+          <% if (operation != "totalOps") { %>
+            <%= operation + ":" + collectionStats[i].operations[operation] %>
+          <% } %>
+        <% } %>
+        </td>
+      </tr>
+    <% } %>
+  </tbody>
+</table>

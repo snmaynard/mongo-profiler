@@ -1,5 +1,6 @@
 mongo = require "mongoskin"
 express = require "express"
+util = require "util"
 
 class ProfileResults
   @requestedAt: 0
@@ -84,37 +85,57 @@ app.helpers
   queryFormatter: (query) ->
     ""
 
+app.get "/", (req, res) ->
+  res.render "index"
+
 # Endpoints
-app.get "/slowqueries", (req, res) ->
+app.get "/slowQueries", (req, res) ->
   ProfileResults.getLatestResults (err, ops) ->
     res.render "operations",
       ops: ops
       
-app.get "/stats", (req, res) ->
+app.get "/collectionStats", (req, res) ->
   ProfileResults.getLatestResults (err, ops) ->
-    profileStats = []
+    collectionStats = []
+    collectionStatsLookup = {}
     for op in ops
-      foundStat = false
-      for profileStat in profileStats
-        if profileStat.collection == op.collection
-          profileStat.operations.totalOps += 1
-          profileStat.operations[op.operation] = 0 unless profileStat.operations[op.operation]?
-          profileStat.operations[op.operation] += 1
-          foundStat = true
-          break
-      if not foundStat
-        profileStats.push({
-          collection: op.collection,
-          operations: {
-            totalOps: 1,
-            op.operation: 1
-          }
-        })
+      index = collectionStatsLookup[op.collection]
+      if not index?
+        index = collectionStats.push({collection: op.collection, operations: {totalOps: 0}}) - 1
+        collectionStatsLookup[op.collection] = index
       
-    profileStats.sort (a,b) ->
-      return a.operations.totalOps > b.operations.totalOps
-          
-    res.render "stats",
-      profileStats: profileStats
+      collectionStats[index].operations.totalOps += 1
+      collectionStats[index].operations[op.operation] = 0 unless collectionStats[index].operations[op.operation]?
+      collectionStats[index].operations[op.operation] += 1
+      
+    collectionStats.sort (a,b) ->
+      return a.operations.totalOps < b.operations.totalOps
+    
+    res.render "collectionStats",
+      collectionStats: collectionStats
+
+app.get "/queryStats", (req, res) ->
+  ProfileResults.getLatestResults (err, ops) ->
+    queryStats = []
+    queryStatsLookup = {}
+    for op in ops
+      if op.normalized_query?
+        queryKey = if op.normalized_query.length == 0 then "NO_QUERY" else op.normalized_query
+      else
+        queryKey = "undefined"
+      index = queryStatsLookup[queryKey]
+      if not index?
+        index = queryStats.push({collection: op.collection, query: queryKey, totalExecutions: 0, totalMillis: 0 }) - 1
+        queryStatsLookup[queryKey] = index
+      
+      
+      queryStats[index].totalExecutions += 1
+      queryStats[index].totalMillis += op.millis
+      
+    queryStats.sort (a,b) ->
+      return a.totalMillis < b.totalMillis
+      
+    res.render "queryStats",
+      queryStats: queryStats
     
 console.log "Starting server on port 8080"

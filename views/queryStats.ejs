@@ -1,0 +1,30 @@
+<style>
+table {
+  width: 100%;
+}
+
+th {
+  text-align: left;
+}
+</style>
+
+<table>
+  <thead>
+    <tr>
+      <th>Query</th>
+      <th>Collection</th>
+      <th>Executed</th>
+      <th>Total Millis</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% for(var i = 0, length = queryStats.length; i < length; i++) { %>
+      <tr>
+        <td><%= queryStats[i].query %></td>
+        <td><%= queryStats[i].collection %></td>
+        <td><%= queryStats[i].totalExecutions %></td>
+        <td><%= queryStats[i].totalMillis %></td>
+      </tr>
+    <% } %>
+  </tbody>
+</table>
