@@ -11,9 +11,9 @@ th {
 <table>
   <thead>
     <tr>
-      <th>Query</th>
       <th>Collection</th>
       <th>Operation</th>
+      <th>Query</th>
       <th>Executed</th>
       <th>Total Millis</th>
     </tr>
@@ -21,9 +21,9 @@ th {
   <tbody>
     <% for(var i = 0, length = queryStats.length; i < length; i++) { %>
       <tr>
-        <td><%= queryStats[i].query %></td>
         <td><%= queryStats[i].collection %></td>
         <td><%= queryStats[i].operation %></td>
+        <td><%= queryStats[i].query %></td>
         <td><%= queryStats[i].totalExecutions %></td>
         <td><%= queryStats[i].totalMillis %></td>
       </tr>
