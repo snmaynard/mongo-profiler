@@ -128,11 +128,11 @@ app.get "/queryStats", (req, res) ->
         index = queryStats.push({collection: op.collection, query: queryKey, operation: op.operation, totalExecutions: 0, totalMillis: 0 }) - 1
         queryStatsLookup[op.operation + queryKey] = index
       
-      
       queryStats[index].totalExecutions += 1
       queryStats[index].totalMillis += op.millis
       
     queryStats.sort (a,b) ->
+      return true if isNaN(a.totalMillis) 
       return a.totalMillis < b.totalMillis
       
     res.render "queryStats",
