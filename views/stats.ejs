@@ -17,14 +17,14 @@ th {
     </tr>
   </thead>
   <tbody>
-    <% for(var collection in profileStats) { %>
+    <% for(var profileStat in profileStats) { %>
       <tr>
-        <td><%= collection %></td>
-        <td><%= profileStats[collection].operations.total %></td>
+        <td><%= profileStat.collection %></td>
+        <td><%= profileStat.operations.total %></td>
         <td>
-        <% for(var operation in profileStats[collection].operations) { %>
+        <% for(var operation in profileStat.operations) { %>
           <% if (operation != "total") { %>
-            <%= operation + ":" + profileStats[collection].operations[operation] %>
+            <%= operation + ":" + profileStats.operations[operation] %>
           <% } %>
         <% } %>
         </td>

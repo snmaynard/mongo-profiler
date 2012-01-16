@@ -92,14 +92,28 @@ app.get "/slowqueries", (req, res) ->
       
 app.get "/stats", (req, res) ->
   ProfileResults.getLatestResults (err, ops) ->
-    profileStats = {}
+    profileStats = []
     for op in ops
-      profileStats[op.collection] = {} unless profileStats[op.collection]?
-      profileStats[op.collection].operations = {} unless profileStats[op.collection].operations?
-      profileStats[op.collection].operations.total = 0 unless profileStats[op.collection].operations.total?
-      profileStats[op.collection].operations[op.operation] = 0 unless profileStats[op.collection].operations[op.operation]?
-      profileStats[op.collection].operations.total += 1
-      profileStats[op.collection].operations[op.operation] += 1
+      foundStat = false
+      for profileStat in profileStats
+        if profileStat.collection == op.collection
+          profileStat.operations.totalOps += 1
+          profileStat.operations[op.operation] = 0 unless profileStat.operations[op.operation]?
+          profileStat.operations[op.operation] += 1
+          foundStat = true
+          break
+      if not foundStat
+        profileStats.push({
+          collection: op.collection,
+          operations: {
+            totalOps: 1,
+            op.operation: 1
+          }
+        })
+      
+    profileStats.sort (a,b) ->
+      return a.operations.totalOps > b.operations.totalOps
+          
     res.render "stats",
       profileStats: profileStats
     
