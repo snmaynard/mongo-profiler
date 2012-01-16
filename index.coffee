@@ -18,7 +18,7 @@ class ProfileResults
     now = new Date()
     return callback(null, @operations[serverKey]) if @requestedAt[serverKey] > new Date(now.getTime() - 60 * 1000)
     
-    range = 1000 * 60 * 60 * 24 * 1
+    range = 1000 * 60 * 60 * 24 * 10
     query =
       ts:
         $gte: new Date(now.getTime() - range)
@@ -131,7 +131,12 @@ app.get "/:server/:db/collectionStats", (req, res) ->
         collectionStats[index].operations[op.operation] += 1
       
       collectionStats.sort (a,b) ->
-        return a.operations.totalOps < b.operations.totalOps
+        if a.operations.totalOps < b.operations.totalOps
+          return 1
+        else if a.operations.totalOps == b.operations.totalOps
+          return 0
+        else
+          return -1
     
       res.render "collectionStats",
         collectionStats: collectionStats
@@ -158,8 +163,12 @@ app.get "/:server/:db/queryStats", (req, res) ->
         queryStats[index].totalMillis += if op.millis? then op.millis else 0
       
       queryStats.sort (a,b) ->
-        return true if isNaN(a.totalMillis) 
-        return a.totalMillis < b.totalMillis
+        if a.totalMillis < b.totalMillis
+          return 1
+        else if a.totalMillis == b.totalMillis
+          return 0
+        else
+          return -1
       
       res.render "queryStats",
         queryStats: queryStats
