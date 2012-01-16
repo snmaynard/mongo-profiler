@@ -1,0 +1,34 @@
+<style>
+table {
+  width: 100%;
+}
+
+th {
+  text-align: left;
+}
+</style>
+
+<table>
+  <thead>
+    <tr>
+      <th>Collection</th>
+      <th>Totals Queries</th>
+      <th>Operations</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% for(var collection in profileStats) { %>
+      <tr>
+        <td><%= collection %></td>
+        <td><%= profileStats[collection].operations.total %></td>
+        <td>
+        <% for(var operation in profileStats[collection].operations) { %>
+          <% if (operation != "total") { %>
+            <%= operation + ":" + profileStats[collection].operations[operation] %>
+          <% } %>
+        <% } %>
+        </td>
+      </tr>
+    <% } %>
+  </tbody>
+</table>
