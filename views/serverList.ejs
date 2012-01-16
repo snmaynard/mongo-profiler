@@ -1,0 +1,26 @@
+<style>
+table {
+  width: 100%;
+}
+
+th {
+  text-align: left;
+}
+</style>
+
+<table>
+  <thead>
+    <tr>
+      <th>Server</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% for(var i = 0, length = servers.length; i < length; i++) { %>
+      <tr>
+        <td><a href="/<%= servers[i] %>"><%= servers[i] %></a></td>
+      </tr>
+    <% } %>
+  </tbody>
+</table>
+
+<p> Add a server by visiting /SERVER_NAME/DB_NAME/</p>

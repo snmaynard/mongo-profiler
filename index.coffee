@@ -5,12 +5,18 @@ express = require "express"
 util = require "util"
 
 class ProfileResults
-  @requestedAt: 0
+  @requestedAt: {}
   @operations: {}
   
-  @getLatestResults: (callback) =>
+  @getKnownServers: () ->
+    res = for key of @operations
+      "#{key}"
+    return res
+    
+  @getLatestResults: (server, db, callback) =>
+    serverKey = server + "/" + db
     now = new Date()
-    return callback(null, @operations) if @requestedAt > new Date(now.getTime() - 60 * 1000)
+    return callback(null, @operations[serverKey]) if @requestedAt[serverKey] > new Date(now.getTime() - 60 * 1000)
     
     range = 1000 * 60 * 60 * 24 * 1
     query =
@@ -18,14 +24,14 @@ class ProfileResults
         $gte: new Date(now.getTime() - range)
         $lt: now
 
-    db.collection("system.profile").find(query, {sort: [["millis", -1]]}).toArray (err, records) =>
+    mongo.db(serverKey).collection("system.profile").find(query, {sort: [["millis", -1]]}).toArray (err, records) =>
       if (err)
         console.log "Error while grabbing profile #{err}"
         return callback(err, null)
 
-      @requestedAt = now
-      @operations = (ProfileResults.generateNormalizedOperation(r) for r in records)
-      return callback(null, @operations)
+      @requestedAt[serverKey] = now
+      @operations[serverKey] = (ProfileResults.generateNormalizedOperation(r) for r in records)
+      return callback(null, @operations[serverKey])
 
   @generateNormalizedQuery: (query) =>
     res = for key, value of query
@@ -46,6 +52,10 @@ class ProfileResults
         res.operation = "count"
         res.collection = profile.command.count
         res.query = profile.command.query
+      else if profile.command.findandmodify
+        res.operation = "findandmodify"
+        res.collection = profile.command.findandmodify
+        res.query = profile.command.update
       else
         res.operation = "unknown"
     else
@@ -59,11 +69,7 @@ class ProfileResults
     res.normalized_query = ProfileResults.generateNormalizedQuery(res.query) if res.query
 
     return res
-
-# Set up db connection
-# db = mongo.db("emongo2.heyzap.com/mobile")
-db = mongo.db("localhost/mobile")
-
+    
 # Set up express
 app = express.createServer();
 
@@ -88,56 +94,74 @@ app.helpers
     ""
 
 app.get "/", (req, res) ->
+  res.render "serverList"
+    servers: ProfileResults.getKnownServers()
+
+app.get "/:server/:db", (req, res) ->
   res.render "index"
+    server: req.params.server
+    db: req.params.db
 
 # Endpoints
-app.get "/slowQueries", (req, res) ->
-  ProfileResults.getLatestResults (err, ops) ->
-    res.render "operations",
-      ops: ops
+app.get "/:server/:db/slowQueries", (req, res) ->
+  ProfileResults.getLatestResults req.params.server, req.params.db, (err, ops) ->
+    if err
+      res.render "error",
+        error: err
+    else
+      res.render "operations",
+        ops: ops
       
-app.get "/collectionStats", (req, res) ->
-  ProfileResults.getLatestResults (err, ops) ->
-    collectionStats = []
-    collectionStatsLookup = {}
-    for op in ops
-      index = collectionStatsLookup[op.collection]
-      if not index?
-        index = collectionStats.push({collection: op.collection, operations: {totalOps: 0}}) - 1
-        collectionStatsLookup[op.collection] = index
+app.get "/:server/:db/collectionStats", (req, res) ->
+  ProfileResults.getLatestResults req.params.server, req.params.db, (err, ops) ->
+    if err
+      res.render "error",
+        error: err
+    else
+      collectionStats = []
+      collectionStatsLookup = {}
+      for op in ops
+        index = collectionStatsLookup[op.collection]
+        if not index?
+          index = collectionStats.push({collection: op.collection, operations: {totalOps: 0}}) - 1
+          collectionStatsLookup[op.collection] = index
       
-      collectionStats[index].operations.totalOps += 1
-      collectionStats[index].operations[op.operation] = 0 unless collectionStats[index].operations[op.operation]?
-      collectionStats[index].operations[op.operation] += 1
+        collectionStats[index].operations.totalOps += 1
+        collectionStats[index].operations[op.operation] = 0 unless collectionStats[index].operations[op.operation]?
+        collectionStats[index].operations[op.operation] += 1
       
-    collectionStats.sort (a,b) ->
-      return a.operations.totalOps < b.operations.totalOps
+      collectionStats.sort (a,b) ->
+        return a.operations.totalOps < b.operations.totalOps
     
-    res.render "collectionStats",
-      collectionStats: collectionStats
+      res.render "collectionStats",
+        collectionStats: collectionStats
 
-app.get "/queryStats", (req, res) ->
-  ProfileResults.getLatestResults (err, ops) ->
-    queryStats = []
-    queryStatsLookup = {}
-    for op in ops
-      if op.normalized_query?
-        queryKey = if op.normalized_query.length == 0 then "NO_QUERY" else op.normalized_query
-      else
-        queryKey = "undefined"
-      index = queryStatsLookup[op.operation + queryKey]
-      if not index?
-        index = queryStats.push({collection: op.collection, query: queryKey, operation: op.operation, totalExecutions: 0, totalMillis: 0 }) - 1
-        queryStatsLookup[op.operation + queryKey] = index
+app.get "/:server/:db/queryStats", (req, res) ->
+  ProfileResults.getLatestResults req.params.server, req.params.db, (err, ops) ->
+    if err
+      res.render "error",
+        error: err
+    else
+      queryStats = []
+      queryStatsLookup = {}
+      for op in ops
+        if op.normalized_query?
+          queryKey = if op.normalized_query.length == 0 then "NO_QUERY" else op.normalized_query
+        else
+          queryKey = "undefined"
+        index = queryStatsLookup[op.operation + queryKey]
+        if not index?
+          index = queryStats.push({collection: op.collection, query: queryKey, operation: op.operation, totalExecutions: 0, totalMillis: 0 }) - 1
+          queryStatsLookup[op.operation + queryKey] = index
       
-      queryStats[index].totalExecutions += 1
-      queryStats[index].totalMillis += op.millis
+        queryStats[index].totalExecutions += 1
+        queryStats[index].totalMillis += if op.millis? then op.millis else 0
       
-    queryStats.sort (a,b) ->
-      return true if isNaN(a.totalMillis) 
-      return a.totalMillis < b.totalMillis
+      queryStats.sort (a,b) ->
+        return true if isNaN(a.totalMillis) 
+        return a.totalMillis < b.totalMillis
       
-    res.render "queryStats",
-      queryStats: queryStats
+      res.render "queryStats",
+        queryStats: queryStats
     
 console.log "Starting server on port 8080"
