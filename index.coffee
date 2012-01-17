@@ -1,6 +1,6 @@
 #!/usr/bin/env coffee
 
-mongo = require "mongoskin"
+mongo = require "mongodb"
 express = require "express"
 util = require "util"
 
@@ -24,14 +24,18 @@ class ProfileResults
         $gte: new Date(now.getTime() - range)
         $lt: now
 
-    mongo.db(serverKey).collection("system.profile", {slaveOk: true}).find(query, {sort: [["millis", -1]]}).toArray (err, records) =>
-      if (err)
-        console.log "Error while grabbing profile #{err}"
-        return callback(err, null)
+    new mongo.Db(db, new mongo.Server(server, 27017, {slaveOk: true})).open (err, p_client) =>
+      if(err)
+        callback(err, null)
+      
+      new mongo.Collection(p_client, 'system.profile').find(query, {sort: [["millis", -1]]}).toArray (err, records) =>
+        if (err)
+          console.log "Error while grabbing profile #{err}"
+          return callback(err, null)
 
-      @requestedAt[serverKey] = now
-      @operations[serverKey] = (ProfileResults.generateNormalizedOperation(r) for r in records)
-      return callback(null, @operations[serverKey])
+        @requestedAt[serverKey] = now
+        @operations[serverKey] = (ProfileResults.generateNormalizedOperation(r) for r in records)
+        return callback(null, @operations[serverKey])
 
   @generateNormalizedQuery: (query) =>
     res = for key, value of query

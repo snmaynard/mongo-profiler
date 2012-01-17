@@ -5,6 +5,6 @@
   "dependencies": {
     "express": "latest",
     "ejs": "latest",
-    "mongoskin": "latest"
+    "mongodb": "latest"
   }
 }
