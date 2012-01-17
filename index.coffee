@@ -156,11 +156,13 @@ app.get "/:server/:db/queryStats", (req, res) ->
           queryKey = "undefined"
         index = queryStatsLookup[op.operation + queryKey]
         if not index?
-          index = queryStats.push({collection: op.collection, query: queryKey, operation: op.operation, totalExecutions: 0, totalMillis: 0 }) - 1
+          index = queryStats.push({collection: op.collection, query: queryKey, operation: op.operation, totalExecutions: 0, totalMillis: 0, totalScanned: 0, totalReturned: 0 }) - 1
           queryStatsLookup[op.operation + queryKey] = index
       
         queryStats[index].totalExecutions += 1
         queryStats[index].totalMillis += if op.millis? then op.millis else 0
+        queryStats[index].totalScanned += if op.nscanned? then op.nscanned else 0
+        queryStats[index].totalReturned += if op.nreturned? then op.nreturned else 0
       
       queryStats.sort (a,b) ->
         if a.totalMillis < b.totalMillis

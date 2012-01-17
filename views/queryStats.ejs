@@ -14,9 +14,11 @@ th {
       <th>Collection</th>
       <th>Operation</th>
       <th>Query</th>
-      <th>Executed</th>
-      <th>Total Millis</th>
       <th>Average Millis</th>
+      <th>Total Millis</th>
+      <th>Executed</th>
+      <th>Total Scanned</th>
+      <th>Total Returned</th>
     </tr>
   </thead>
   <tbody>
@@ -25,9 +27,11 @@ th {
         <td><%= queryStats[i].collection %></td>
         <td><%= queryStats[i].operation %></td>
         <td><%= queryStats[i].query %></td>
-        <td><%= queryStats[i].totalExecutions %></td>
-        <td><%= queryStats[i].totalMillis %></td>
         <td><%= Math.round(queryStats[i].totalMillis/queryStats[i].totalExecutions) %></td>
+        <td><%= queryStats[i].totalMillis %></td>
+        <td><%= queryStats[i].totalExecutions %></td>
+        <td><%= queryStats[i].totalScanned %></td>
+        <td><%= queryStats[i].totalReturned %></td>
       </tr>
     <% } %>
   </tbody>
