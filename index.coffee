@@ -28,7 +28,7 @@ class ProfileResults
       if(err)
         callback(err, null)
       
-      new mongo.Collection(p_client, 'system.profile').find(query, {sort: [["millis", -1]]}).toArray (err, records) =>
+      new mongo.Collection(p_client, 'system.profile', null, {slaveOk: true}).find(query, {sort: [["millis", -1]], slaveOk: true}).toArray (err, records) =>
         if (err)
           console.log "Error while grabbing profile #{err}"
           return callback(err, null)
