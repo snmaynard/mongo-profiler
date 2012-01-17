@@ -16,6 +16,7 @@ th {
       <th>Query</th>
       <th>Executed</th>
       <th>Total Millis</th>
+      <th>Average Millis</th>
     </tr>
   </thead>
   <tbody>
@@ -26,6 +27,7 @@ th {
         <td><%= queryStats[i].query %></td>
         <td><%= queryStats[i].totalExecutions %></td>
         <td><%= queryStats[i].totalMillis %></td>
+        <td><%= Math.round(queryStats[i].totalMillis/queryStats[i].totalExecutions) %></td>
       </tr>
     <% } %>
   </tbody>
