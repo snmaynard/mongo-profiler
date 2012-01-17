@@ -24,7 +24,7 @@ class ProfileResults
         $gte: new Date(now.getTime() - range)
         $lt: now
 
-    mongo.db(serverKey).collection("system.profile").find(query, {sort: [["millis", -1]]}).toArray (err, records) =>
+    mongo.db(serverKey).collection("system.profile", {slaveOk: true}).find(query, {sort: [["millis", -1]]}).toArray (err, records) =>
       if (err)
         console.log "Error while grabbing profile #{err}"
         return callback(err, null)
