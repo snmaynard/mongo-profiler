@@ -17,14 +17,8 @@ class ProfileResults
     serverKey = server + "/" + db
     now = new Date()
     return callback(null, @operations[serverKey]) if @requestedAt[serverKey] > new Date(now.getTime() - 60 * 1000)
-    
-    range = 1000 * 60 * 60 * 24 * 1
-    query =
-      ts:
-        $gte: new Date(now.getTime() - range)
-        $lt: now
 
-    mongo.db(serverKey).collection("system.profile").find(query, {sort: [["millis", -1]], slaveOk: true}).toArray (err, records) =>
+    mongo.db(serverKey).collection("system.profile").find({}, {slaveOk: true}).toArray (err, records) =>
       if (err)
         console.log "Error while grabbing profile #{err}"
         return callback(err, null)
@@ -109,6 +103,13 @@ app.get "/:server/:db/slowQueries", (req, res) ->
       res.render "error",
         error: err
     else
+      ops.sort (a,b) ->
+        if a.millis < b.millis
+          return 1
+        else if a.millis == b.millis
+          return 0
+        else
+          return -1
       res.render "operations",
         ops: ops
       
